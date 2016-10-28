@@ -225,8 +225,12 @@ void drawCutLine(const Region &region, int index, const char *dirname) {
 	int whiteCount[region.img.cols] = {0};
 	for(int i = 0; i < region.img.cols; ++ i) {
 		for (int j = 0; j < region.img.rows; ++ j) {
-			whiteCount[i] += (1 - region.img.at<uchar>(j, i) / 255); // float and int ??
+            int pt = region.img.at<uchar>(j, i);
+			int temp = 1 - pt / 255; // float and int ??
+            whiteCount[i] += temp;
+            //cout << "pt[" << j << "][" << i << "] = " << pt << ", temp = " << temp << ", whiteCount = " << whiteCount[i] << endl;
 		}
+        //cout << "whiteCount[" << i << "] = " << whiteCount[i] << endl;
 	}
 
 	int start = 0;
@@ -245,7 +249,6 @@ void drawCutLine(const Region &region, int index, const char *dirname) {
 	}
     cout << "region.patches.size() = " << region.patches.size() << endl;
 	findHeights(region);
-
 	return region;
 }
 
@@ -329,18 +332,18 @@ bool validChinesePatch(Patch patch, int standardH, int standardW) {
 	float ratio = (width < height) ? width / height : height / width;
 	float ratiow = (width < standardW) ? width / standardW : standardW / width;
 	float ratioh = (height < standardH) ? height / standardH : standardH / height;
-	
-	if (ratio >= 0.83 && ratioh >= 0.85 && ratiow >= 0.85) {
-        /*
-		cout << endl << "valid" << endl;
-		cout << "patch width = " << width << " height = " << height << endl;
-		cout << "standardH is " << standardH << endl;
-		cout << "standardW is " << standardW << endl;
-		cout << "width / height is " << ratio << endl;
-		cout << "width / standardW is " << ratiow << endl;
-		cout << "height / standardH is " << ratioh << endl;
-		cout << "valid" << endl << endl;
-        */
+    /*
+    cout << endl << "valid" << endl;
+    cout << "patch width = " << width << " height = " << height << endl;
+    cout << "standardH is " << standardH << endl;
+    cout << "standardW is " << standardW << endl;
+    cout << "width / height is " << ratio << endl;
+    cout << "width / standardW is " << ratiow << endl;
+    cout << "height / standardH is " << ratioh << endl;
+    cout << "valid" << endl << endl;*/
+    
+	if (ratio >= 0.8 && ratioh >= 0.8 && ratiow >= 0.8) {
+
 		return true;
 	}
     /*
@@ -411,6 +414,11 @@ void merge(Region &region) {
 		Patch tmpPatch = Patch(patch1.start, patch2.end, 
 				min(patch1.top, patch2.top), 
 				max(patch1.bottom, patch2.bottom), P_HANZI);
+        if (validChinesePatch(tmpPatch, region.meanHeight, region.meanWidth)) {
+            newPatches.push_back(tmpPatch);
+            i = i + 1;
+            continue;
+        }
 
 		if (i + 2 < len) {
 			Patch patch3 = region.patches[i + 2];
@@ -478,7 +486,6 @@ void merge(Region &region) {
 				&& (region.patches[i+2].start - patch2.end) > region.meanHeight / 3) {
 			canMerge = false;
 		}
-
 		if (!canMerge) {
 			newPatches.push_back(patch1);
 		} else {
@@ -789,11 +796,23 @@ void saveTextLines(Region &region, int index, const char dirname[]) {
     int count = 0;
     for (int i = 0; i < len; ++ i) {
         Patch patch = region.patches[i];
-        if (!validChinesePatch(patch, region.meanHeight, region.meanWidth)) {
-           continue; 
-        }
-        cv::Rect rect(patch.start, patch.top, 
-                      patch.end - patch.start, patch.bottom - patch.top);
+        //if (!validChinesePatch(patch, region.meanHeight, region.meanWidth)) {
+        //   continue; 
+        //}
+        int mheight = region.img.rows;
+        int top = 0;
+        cout << "patch.bottom - patch.top = " << patch.bottom - patch.top << endl;
+        cout << "region.img.rows = " << region.img.rows << endl;
+        /*if(patch.bottom - patch.top < region.img.rows-2){
+            mheight = region.img.rows-2;
+            top = patch.bottom - region.img.rows-2;
+        }else{
+            mheight = patch.bottom - patch.top;
+            top = patch.top;
+        }*/
+        
+        cv::Rect rect(patch.start, top, 
+                      patch.end - patch.start, mheight);
         cv::Mat roi = img(rect);
         cv::Mat pic = 255 * cv::Mat::ones(roi.rows + PIC_PADDING, roi.cols + PIC_PADDING, CV_8UC1);
         cv::Rect r((pic.cols - roi.cols) / 2,(pic.rows - roi.rows) / 2, roi.cols, roi.rows);
@@ -801,8 +820,11 @@ void saveTextLines(Region &region, int index, const char dirname[]) {
         
         char filename[32]; 
         sprintf(filename, "%s/%d.png", path, count);
+        cout << filename << " saved ." << endl;
         count ++;
-        cv::imwrite(filename, pic);
+		cv::Mat pic48;
+		resize(pic,pic48,cv::Size(48,48),0,0,CV_INTER_LINEAR);
+        cv::imwrite(filename, pic48);
     }
 }
 
