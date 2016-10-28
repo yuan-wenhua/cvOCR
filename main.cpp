@@ -10,6 +10,7 @@
 #include <iostream>
 #include <vector>
 #include <fstream>
+#include <dirent.h>
 using namespace std;
 
 
@@ -18,47 +19,65 @@ using namespace std;
  * 重切分（recut），合并（merge）
  */
 
-void preprocessImage(char *filename) {
-	cv::Mat img = cv::imread(filename);
-	cv::Mat gray;
-	cvtColor(img, gray, CV_BGR2GRAY);
 
-	PreImageProcessor *pip = new PreImageProcessor(img);
+void preprocessImage(char *filename, char *output_folder) {
+
+	cv::Mat dst = cv::imread(filename);
+	//cv::Mat dst;
+	//cvtColor(img, dst, CV_BGR2GRAY);
+	
+	PreImageProcessor *pip = new PreImageProcessor(dst);
 	pip->init();
-    
-    vector<cv::Mat> textLines = pip->getTextLines();
-    vector<cv::RotatedRect> rotatedRects = pip->getRotatedRects();
-    vector<pair<int, int> > tlIndex = pip->getTextLineIndex();
-    pip->drawRectangles(img, pip->getRotatedRects());
+	
+	vector<cv::Mat> textLines = pip->getTextLines();
+	vector<cv::RotatedRect> rotatedRects = pip->getRotatedRects();
+	vector<pair<int, int> > tlIndex = pip->getTextLineIndex();
+	pip->drawRectangles(dst, pip->getRotatedRects());
 
-    // 创建和清空文本
-    fstream out("region.txt", ios::out);
-    out.close();
-    int len = textLines.size();
-    char myfile[16];
-    //cout << "序号\t汉字数\t英文数\t高度\t类型" << endl;
-    for (int i = 0; i < len; ++ i) {
-        Region region = cut(textLines[i]);
-        drawCutLine(region, i, "./tempFiles/cut");
-        reCut(region);
-        drawCutLine(region, i, "./tempFiles/recut");
-        merge(region);
-        drawCutLine(region, i, "./tempFiles/merge");
-        //divideLangRegion(region, i);
-        findTextlineType(region, i);
-        findPatchType(region, i);
-        findEnglishText(region, i);
-        saveRegionToFile(region, i, "region.txt", tlIndex[i].first, tlIndex[i].second);
-    }
+	// 创建和清空文本
+	fstream out("region.txt", ios::out);
+	out.close();
+	int len = textLines.size();
+	//char myfile[16];
+	//cout << "序号\t汉字数\t英文数\t高度\t类型" << endl;
+	int regionSize = 0;
+	for (int i = 0; i < len; ++ i) {
+		Region region = cut(textLines[i]);
+        char cutpath[64];
+        sprintf(cutpath, "%s/tempFiles/cut", output_folder);
+        mkdir(cutpath , 0755);
+		drawCutLine(region, i, cutpath);
+		/*reCut(region);
+        char recutpath[32];
+        sprintf(recutpath, "%s/tempFiles/recut", output_folder);
+        mkdir(recutpath , 0755);
+		drawCutLine(region, i, recutpath);*/
+		merge(region);
+        char mergepath[64];
+        sprintf(mergepath, "%s/tempFiles/merge", output_folder);
+        mkdir(mergepath , 0755);
+		drawCutLine(region, i, mergepath);
+		saveTextLines(region, i, output_folder);
+		//divideLangRegion(region, i);
+		//findTextlineType(region, i);
+		//findPatchType(region, i);
+		//findEnglishText(region, i);
+		saveRegionToFile(region, i, "region.txt", tlIndex[i].first, tlIndex[i].second);
+	}
 }
 
+
+
 int main(int argc, char** argv) {
-	if (argc != 2) {
-		cout << "Please specify the input image!" << endl;
+	if (argc != 3) {
+		cout << "Please specify the input image and output folder!" << endl;
 		return -1;
 	}
-
-	preprocessImage(argv[1]);
+	mkdir(argv[2], 0755);
+    char temppath[32];
+    sprintf(temppath, "%s/tempFiles", argv[2]);
+    mkdir(temppath , 0755);
+	preprocessImage(argv[1], argv[2]);
 	
 	return 0;
 }

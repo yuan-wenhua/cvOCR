@@ -318,6 +318,8 @@ vector<cv::RotatedRect> PreImageProcessor::findRotatedRectsWithMSER(cv::Mat gray
     vector<cv::Rect> rects;
 
     cv::Ptr<cv::MSER> mser = cv::MSER::create(1, 20);
+	//cv::Ptr<cv::MSER> mser = cv::MSER::create(21, (int)(0.00002*gray.cols*gray.rows), 
+	//		(int)(0.05*gray.cols*gray.rows), 1.0, 0.7, 200, 1.01, 0.003, 5);
     mser->detectRegions(gray, regions, rects);
     cout << "find " << regions.size() << " contours!" << endl;
 
