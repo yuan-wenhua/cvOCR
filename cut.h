@@ -784,7 +784,7 @@ void findTextlineType(Region &region, int index) {
  * input: index 第 i 行文字
  * input: dirname 要存放的单字图片的文件夹
  */
-void saveTextLines(Region &region, int index, const char dirname[]) {
+void saveTextLines(Region &region, int index, const char dirname[], int x, int y) {
     // create a File
     // dirname/index/
     char path[32];
@@ -801,8 +801,8 @@ void saveTextLines(Region &region, int index, const char dirname[]) {
         //}
         int mheight = region.img.rows;
         int top = 0;
-        cout << "patch.bottom - patch.top = " << patch.bottom - patch.top << endl;
-        cout << "region.img.rows = " << region.img.rows << endl;
+        //cout << "patch.bottom - patch.top = " << patch.bottom - patch.top << endl;
+        //cout << "region.img.rows = " << region.img.rows << endl;
         /*if(patch.bottom - patch.top < region.img.rows-2){
             mheight = region.img.rows-2;
             top = patch.bottom - region.img.rows-2;
@@ -810,8 +810,8 @@ void saveTextLines(Region &region, int index, const char dirname[]) {
             mheight = patch.bottom - patch.top;
             top = patch.top;
         }*/
-        
-        cv::Rect rect(patch.start, top, 
+
+        cv::Rect rect(patch.start, top,
                       patch.end - patch.start, mheight);
         cv::Mat roi = img(rect);
         cv::Mat pic = 255 * cv::Mat::ones(roi.rows + PIC_PADDING, roi.cols + PIC_PADDING, CV_8UC1);
@@ -819,7 +819,7 @@ void saveTextLines(Region &region, int index, const char dirname[]) {
         roi.copyTo(pic(r));
         
         char filename[32]; 
-        sprintf(filename, "%s/%d.png", path, count);
+        sprintf(filename, "%s/%d_%d_%d_%d_%d_%d.png", path, count, patch.ptype, x + patch.start, y + patch.top, x + patch.end, y + patch.bottom);
         cout << filename << " saved ." << endl;
         count ++;
 		cv::Mat pic48;

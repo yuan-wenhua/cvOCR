@@ -11,6 +11,9 @@
 #include <vector>
 #include <fstream>
 #include <dirent.h>
+#include "opencv2/core/core.hpp"  
+#include"opencv2/highgui/highgui.hpp"  
+#include"opencv2/imgproc/imgproc.hpp"  
 using namespace std;
 
 
@@ -23,10 +26,14 @@ using namespace std;
 void preprocessImage(char *filename, char *output_folder) {
 
 	cv::Mat dst = cv::imread(filename);
-	//cv::Mat dst;
 	//cvtColor(img, dst, CV_BGR2GRAY);
-	
-	PreImageProcessor *pip = new PreImageProcessor(dst);
+    /*cv::Mat out_pic; 
+    cv::Mat binary;    
+    medianBlur( dst, out_pic, 7);  
+    cv:threshold(out_pic, binary, 100, 255, CV_THRESH_BINARY);
+    cv::imwrite("out.jpg", binary);*/
+
+    PreImageProcessor *pip = new PreImageProcessor(dst);
 	pip->init();
 	
 	vector<cv::Mat> textLines = pip->getTextLines();
@@ -57,7 +64,10 @@ void preprocessImage(char *filename, char *output_folder) {
         sprintf(mergepath, "%s/tempFiles/merge", output_folder);
         mkdir(mergepath , 0755);
 		drawCutLine(region, i, mergepath);
-		saveTextLines(region, i, output_folder);
+        
+        cv::RotatedRect rotate = rotatedRects[i];
+		cv::Rect rect = rotate.boundingRect();
+		saveTextLines(region, i, output_folder, rect.x, rect.y);
 		//divideLangRegion(region, i);
 		//findTextlineType(region, i);
 		//findPatchType(region, i);
