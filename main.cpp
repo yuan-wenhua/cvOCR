@@ -65,6 +65,11 @@ void preprocessImage(char *filename, char *output_folder) {
         mkdir(mergepath , 0755);
 		drawCutLine(region, i, mergepath);
         
+        //divideLangRegion(region, i);
+        findTextlineType(region, i);
+		findPatchType(region, i);
+        findEnglishText(region, i);
+        
         cv::RotatedRect rotate = rotatedRects[i];
 		cv::Rect rect = rotate.boundingRect();
 		saveTextLines(region, i, output_folder, rect.x, rect.y);
