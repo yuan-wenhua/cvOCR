@@ -344,13 +344,13 @@ vector<cv::RotatedRect> PreImageProcessor::findRotatedRectsWithMSER(cv::Mat gray
     }
     cv::imwrite("mask.jpg", mask);
 
-    cv::Mat kernel1 = getStructuringElement(cv::MORPH_RECT, cv::Size(5, 1));
+    //cv::Mat kernel1 = getStructuringElement(cv::MORPH_RECT, cv::Size(5, 1));
     cv::Mat kernel2 = getStructuringElement(cv::MORPH_RECT, cv::Size(50, 1));
     cv::Mat dilation, closing;
-    cv::dilate(mask, dilation, kernel1, cv::Point(-1, -1), 2);
+    //cv::dilate(mask, dilation, kernel1, cv::Point(-1, -1), 2);
     cv::morphologyEx(mask, closing, cv::MORPH_CLOSE, kernel2);
 
-    cv::imwrite("dilation.png", dilation);
+    //cv::imwrite("dilation.png", dilation);
     cv::imwrite("closing.png", closing);
     
     vector<vector<cv::Point> > contours;
