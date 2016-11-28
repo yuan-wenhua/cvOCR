@@ -525,15 +525,15 @@ void PreImageProcessor::extractTextLines() {
 
 		cv::warpAffine(roi, warp, matrix, roi.size(), CV_INTER_CUBIC);
 		cv::getRectSubPix(warp, rotate.size, center, crop);
-		cv::GaussianBlur(crop, blur, cv::Size(7, 7), 0);
-		cv::adaptiveThreshold(blur, adaptive, 255, CV_ADAPTIVE_THRESH_GAUSSIAN_C,
-				CV_THRESH_BINARY, 11, 2);
+		//cv::GaussianBlur(crop, blur, cv::Size(7, 7), 0);
+		//cv::adaptiveThreshold(blur, adaptive, 255, CV_ADAPTIVE_THRESH_GAUSSIAN_C,
+		//		CV_THRESH_BINARY, 11, 2);
 
-		mTextLines.push_back(adaptive);
+		mTextLines.push_back(crop);
 
 		char name[128];
 		sprintf(name, "./tempFiles/textLine/%d.png", i);
-		cv::imwrite(name, adaptive);
+		cv::imwrite(name, crop);
 	}
 }
 

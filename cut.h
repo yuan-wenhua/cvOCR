@@ -101,6 +101,7 @@ enum RegionType {
  */
 struct Region {
 	cv::Mat img;
+    cv::Mat imgOri;
 	int meanHeight;
     int meanWidth;
 	vector<Patch> patches;
@@ -220,8 +221,14 @@ void drawCutLine(const Region &region, int index, const char *dirname) {
  */
  Region cut(const cv::Mat gray) {
 	Region region;
-	region.img = gray;
-
+	
+    region.imgOri = gray;
+    cv::Mat blur, adaptive;
+    cv::GaussianBlur(gray, blur, cv::Size(7, 7), 0);
+    cv::adaptiveThreshold(blur, adaptive, 255, CV_ADAPTIVE_THRESH_GAUSSIAN_C,
+    		CV_THRESH_BINARY, 11, 2);       
+    region.img = adaptive;       
+            
 	int whiteCount[region.img.cols] = {0};
 	for(int i = 0; i < region.img.cols; ++ i) {
 		for (int j = 0; j < region.img.rows; ++ j) {
@@ -783,6 +790,7 @@ void findTextlineType(Region &region, int index) {
  * input: region 切分信息
  * input: index 第 i 行文字
  * input: dirname 要存放的单字图片的文件夹
+ * x, y:行在原图中的位置
  */
 void saveTextLines(Region &region, int index, const char dirname[], int x, int y) {
     // create a File
@@ -791,7 +799,7 @@ void saveTextLines(Region &region, int index, const char dirname[], int x, int y
     sprintf(path, "%s/%d", dirname, index);
     mkdir(path, 0755);
 
-    cv::Mat img = region.img;
+    cv::Mat img = region.imgOri;
     int len = region.patches.size();
     int count = 0;
     for (int i = 0; i < len; ++ i) {
