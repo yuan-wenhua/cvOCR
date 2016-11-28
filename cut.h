@@ -213,7 +213,26 @@ void drawCutLine(const Region &region, int index, const char *dirname) {
 	sprintf(filename, "./%s/%d.png", dirname, index);
 	cv::imwrite(filename, img);
 }
+cv::Mat morphologyProcess2(const cv::Mat &gray) {
+	cv::Mat sobel, blur, binary, dilation, erosion, closing;
+	cv::Mat element1, element2, kernel;
 
+	element1 = getStructuringElement(cv::MORPH_RECT, cv::Size(20, 1));
+	element2 = getStructuringElement(cv::MORPH_RECT, cv::Size(28, 3));
+	kernel = getStructuringElement(cv::MORPH_RECT, cv::Size(3, 3));
+
+	cv::Sobel(gray, sobel, CV_8U, 1, 0, 1, 1, 0);
+	cv::GaussianBlur(sobel, blur, cv::Size(5, 5), 0, 0);
+	cv::threshold(blur, binary, 90, 255, CV_THRESH_BINARY);
+
+	//cv::dilate(binary, dilation, element2, cv::Point(-1, -1), 1);
+	//cv::erode(dilation, erosion, element1, cv::Point(-1, -1), 2);
+	//cv::dilate(erosion, dilation, element2, cv::Point(-1, -1), 2);
+	cv::morphologyEx(binary, closing, cv::MORPH_CLOSE, kernel);
+
+	return closing;
+}
+int ssss = 0;
 /*
  * description: 读取图片，用垂直投影法切割单字
  * input: const cv::Mat gray 灰度图 
@@ -221,13 +240,30 @@ void drawCutLine(const Region &region, int index, const char *dirname) {
  */
  Region cut(const cv::Mat gray) {
 	Region region;
-	
+	ssss ++ ;
     region.imgOri = gray;
-    cv::Mat blur, adaptive;
+    
+    cv::Mat blur, adaptive, closing, dilation, element2;
     cv::GaussianBlur(gray, blur, cv::Size(7, 7), 0);
     cv::adaptiveThreshold(blur, adaptive, 255, CV_ADAPTIVE_THRESH_GAUSSIAN_C,
-    		CV_THRESH_BINARY, 11, 2);       
-    region.img = adaptive;       
+    		CV_THRESH_BINARY, 11, 2); 
+    element2 = getStructuringElement(cv::MORPH_RECT, cv::Size(3, 3));
+    cv::dilate(adaptive, dilation, element2, cv::Point(-1, -1), 1);
+    char filename[32]; 
+    sprintf(filename, "%d_adptive.png", ssss);
+    //cv::imwrite(filename, dilation);
+    /*       
+    cv::Mat element1, element2, dilation, erosion;       
+    element1 = getStructuringElement(cv::MORPH_RECT, cv::Size(20, 1));
+	element2 = getStructuringElement(cv::MORPH_RECT, cv::Size(28, 3));
+    cv::dilate(adaptive, dilation, element2, cv::Point(-1, -1), 1);
+	cv::erode(dilation, erosion, element1, cv::Point(-1, -1), 2);   
+    
+    cv::Mat kernel = getStructuringElement(cv::MORPH_RECT, cv::Size(9, 1));
+    cv::morphologyEx(adaptive, closing, cv::MORPH_CLOSE, kernel);*/
+    //cv::Mat closing = morphologyProcess2(gray);
+    //cv::imwrite("closeline.png", closing);
+    region.img = dilation;       
             
 	int whiteCount[region.img.cols] = {0};
 	for(int i = 0; i < region.img.cols; ++ i) {
